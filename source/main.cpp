@@ -48,7 +48,6 @@ int main()
 			string b=tl(2,"Enter URL","Download");
 			consoleSelect(&top);
 			cout<<"\x1b[2J";
-			cout<<"Entered URL:"<<b<<endl;
 			ret=http_download(b,ab);
 			if(ret==0)
 			cout<<"\x1b[33;1mDownload :\x1b[32;1m Success\x1b[37;1m"<<endl;
