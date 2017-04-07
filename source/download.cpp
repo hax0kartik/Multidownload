@@ -6,6 +6,7 @@
 #include "fs.hpp"
 #include "gfx.hpp"
 #include "util.hpp"
+#include "extract_zip.hpp"
 #include <cstdlib>
 using namespace std;
 Result http_download(string url,string loca)
@@ -13,7 +14,6 @@ Result http_download(string url,string loca)
 	Result ret = 0;
 	u32 statuscode=0;
 	u32 contentsize=0, readsize=0, size=0;
-	
 	u8* buf;u8 *lastbuf;
 	char a[2048];
 	string strNew;
@@ -29,7 +29,6 @@ Result http_download(string url,string loca)
 	bar.print();
 	consoleSelect(&top);
 	cout<<"\x1b[33;1mDownloading : \x1b[37;1m"<<url<<endl;
-	int ds = 0; 
 	ret = httpcOpenContext(&context, HTTPC_METHOD_GET, url.c_str(), 0);
 	if (ret != 0)
 	{
@@ -111,8 +110,11 @@ Result http_download(string url,string loca)
 		// This download loop resizes the buffer as data is read.
 		ret = httpcDownloadData(&context, buf+size, 0x1000, &readsize);
 		size += readsize;
+		if(contentsize!=0){	
 		bar.update(readsize);
 		bar.print();
+		}
+		else{ ; }
 		if (ret == (s32)HTTPC_RESULTCODE_DOWNLOADPENDING){
 				lastbuf = buf; // Save the old pointer, in case realloc() fails.
 				buf = (u8*)realloc(buf, size + 0x1000);
@@ -152,6 +154,14 @@ Result http_download(string url,string loca)
 	cout<<"\r\x1b[33;1mFile saved as : \x1b[37;1m"<<location<<endl;
 	string buffer((char*)buf, size);
 	wf(location,buffer);
+	if(location.find(".zip")!=string::npos)
+	{	cout<<"Zip file found"<<endl;
+		int i = zip_extract(location, loca);
+		if(i==0)
+		cout<<"Extraction Successful"<<endl;
+		else
+		cout<<"Extraction Failed but zip file saved"<<endl;	
+	}
 	httpcCloseContext(&context);
 	return 0;
 }

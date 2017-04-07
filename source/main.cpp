@@ -49,7 +49,7 @@ int main()
 			consoleSelect(&top);
 			cout<<"\x1b[2J";
 			cout<<"Entered URL:"<<b<<endl;
-			ret=http_download("http://gbatemp.net/attachments/multidownload-zip.61483/",ab);
+			ret=http_download(b,ab);
 			if(ret==0)
 			cout<<"\x1b[33;1mDownload :\x1b[32;1m Success\x1b[37;1m"<<endl;
 			else
@@ -77,7 +77,8 @@ int main()
 			cout<<"\x1b[2J";
 			consoleInit(GFX_TOP,&top);
 			consoleSelect(&top);
-			cout<<ac;
+			draw_border(GFX_TOP,0,255,255);
+			consoleSetWindow(&top, 1, 1, 47, 28);
 			ret=http_download(ac,ab);
 			if(ret==0)
 			cout<<"\x1b[33;1mDownload :\x1b[32;1m Success\x1b[37;1m"<<endl;

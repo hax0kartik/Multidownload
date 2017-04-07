@@ -15,7 +15,7 @@ public:
 	lastPartOfpBar = "]",
 	pBarFiller = "=",
 	pBarUpdater = ">";
-	int neededProgress = 0;
+	double neededProgress = 0;
 private:
 	int amountOfFiller,
 	pBarLength = 35, //I would recommend NOT changing this

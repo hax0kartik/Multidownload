@@ -83,7 +83,7 @@ void pBar::length_set(int size){
 }
 void pBar::print() {
 	currUpdateVal %= pBarUpdater.length();
-	printf("\x1b[14;0H\x1b[37;1mDownloaded %.2f MBs out of %.2f MBs.",(currentProgress/1048576),(float)(neededProgress/1048576));
+	printf("\x1b[14;0H\x1b[37;1mDownloaded %.2f MBs out of %.2f MBs.",(currentProgress/1048576),(neededProgress/1048576));
 	cout << "\x1b[15;0H" 
 	<< firstPartOfpBar; //Print out first part of pBar
 	for (int a = 0; a < amountOfFiller; a++) { //Print out current progress
