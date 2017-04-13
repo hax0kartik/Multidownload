@@ -55,7 +55,7 @@ Result http_download(string url,string loca)
 	}
 	ret = httpcGetResponseStatusCodeTimeout(&context, &statuscode,6000000000);
 	if (ret != 0)
-	{
+	{	cout<<"\x1b[31;1mError 0x"<<hex<<setw(8)<<ret<<endl;
 		cout<<"Wrong protocol/Internet not connected "<<url<<endl;
 		httpcCloseContext(&context);
 		return 1;
@@ -143,7 +143,7 @@ Result http_download(string url,string loca)
 	//We'll now check for invalid characters in filename(unlikely to occur)
 	if(strNew.find("/")!=string::npos||strNew.find("#")!=string::npos||strNew.find("\\")!=string::npos||strNew.find(":")!=string::npos||strNew.find("*")!=string::npos
 	||strNew.find("?")!=string::npos||strNew.find("\"")!=string::npos||strNew.find("<")!=string::npos||strNew.find(">")!=string::npos||strNew.find("|")!=string::npos
-	||strNew.find("%")!=string::npos)
+	||strNew.find("%")!=string::npos||strNew.empty())
 	{
 		strNew = tl(1,"Please enter the filename along with the extension.Eg:-multi.zip,k.3dsx,file.pdf,etc.","OK");
 		cout<<strNew<<endl;
