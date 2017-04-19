@@ -1,0 +1,9 @@
+#exclude
+
+/build/*
+*.3dsx
+*.cia
+*.icn
+*.bnr
+*.elf
+*.smdh

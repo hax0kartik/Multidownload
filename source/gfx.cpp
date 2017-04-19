@@ -98,4 +98,3 @@ void pBar::print() {
 	<< flush;
 	currUpdateVal += 1;
 	}
-

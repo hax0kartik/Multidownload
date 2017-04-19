@@ -1,3 +1,4 @@
 #include <string>
-void wf(std::string a,std::string b);
+#include <cstring>
+void wf(std::string a,uint8_t *b,size_t size);
 std::string rf(std::string a);

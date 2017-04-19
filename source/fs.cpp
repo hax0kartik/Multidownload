@@ -3,13 +3,16 @@
 #include <string>
 #include <sstream>
 #include <fstream>
-
+#include <cstdio>
+#include <iomanip>
 using namespace std;
-void wf(string a,string b)
+void wf(string a,uint8_t* b, size_t size)
 {
-	ofstream out(a);
-	out << b;
-	out.close();
+	cout<<"Writing the file please wait..."<<endl;
+	FILE *fp;
+	fp = fopen(a.c_str() , "w+b" );
+	fwrite(b, 1 , size, fp);
+	fclose(fp);
 }	
 string rf(string a)
 {

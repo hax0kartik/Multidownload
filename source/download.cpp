@@ -152,8 +152,7 @@ Result http_download(string url,string loca)
 	string location=loca + strNew;
 	consoleSelect(&top);
 	cout<<"\r\x1b[33;1mFile saved as : \x1b[37;1m"<<location<<endl;
-	string buffer((char*)buf, size);
-	wf(location,buffer);
+	wf(location, buf, size);
 	if(location.find(".zip")!=string::npos)
 	{	cout<<"Zip file found"<<endl;
 		int i = zip_extract(location, loca);
