@@ -14,7 +14,7 @@ Result http_download(string url,string loca)
 	Result ret = 0;
 	u32 statuscode=0;
 	u32 contentsize=0, readsize=0, size=0;
-	u8* buf;u8 *lastbuf;
+	u64* buf;u64 *lastbuf;
 	char a[2048];
 	string strNew;
 	httpcContext context;
@@ -98,7 +98,7 @@ Result http_download(string url,string loca)
 	cout<<"\x1b[33;1msize(may be wrong) : \x1b[37;1m"<<contentsize<<endl;
 	gfxFlushBuffers();
 	gfxSwapBuffers();
-	buf = (u8*)malloc(0x1000);
+	buf = (u64*)malloc(0x1000);
 	if(buf==NULL){
 		httpcCloseContext(&context);
 		return 1;
@@ -108,7 +108,7 @@ Result http_download(string url,string loca)
 	bar.print();
 	do {
 		// This download loop resizes the buffer as data is read.
-		ret = httpcDownloadData(&context, buf+size, 0x1000, &readsize);
+		ret = httpcDownloadData(&context,(u8*) buf+size, 0x1000, &readsize);
 		size += readsize;
 		if(contentsize!=0){	
 		bar.update(readsize);
@@ -117,7 +117,7 @@ Result http_download(string url,string loca)
 		else{ ; }
 		if (ret == (s32)HTTPC_RESULTCODE_DOWNLOADPENDING){
 				lastbuf = buf; // Save the old pointer, in case realloc() fails.
-				buf = (u8*)realloc(buf, size + 0x1000);
+				buf = (u64*)realloc(buf, size + 0x1000);
 				if(buf==NULL){
 					httpcCloseContext(&context);
 					free(lastbuf);
@@ -134,7 +134,7 @@ Result http_download(string url,string loca)
 
 	// Resize the buffer back down to our actual final size
 	lastbuf = buf;
-	buf = (u8*)realloc(buf, size);
+	buf = (u64*)realloc(buf, size);
 	if(buf==NULL){ // realloc() failed.
 		httpcCloseContext(&context);
 		free(lastbuf);

@@ -6,7 +6,7 @@
 #include <cstdio>
 #include <iomanip>
 using namespace std;
-void wf(string a,uint8_t* b, size_t size)
+void wf(string a,uint64_t* b, size_t size)
 {
 	cout<<"Writing the file please wait..."<<endl;
 	FILE *fp;
