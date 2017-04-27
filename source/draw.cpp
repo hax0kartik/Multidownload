@@ -19,15 +19,15 @@ void print_all_values_in_filear(void) {
             // If it is a dir
             if (!isfile_arr[i+scroll]) {
                 // print as white text on black background
-                if (i == selected) { printf("\x1b[31m\x1b[47;30m%-49.49s\x1b[0m\n", file_arr[i+scroll]); }
+                if (i == selected) { printf("\x1b[31m\x1b[47;30m%-47.47s\x1b[0m\n", file_arr[i+scroll]); }
                 // Else, just print it without highlight
-                else { printf("\x1b[31;1m%-49.49s\x1b[0m\n", file_arr[i+scroll]); }
+                else { printf("\x1b[31;1m%-47.47s\x1b[0m\n", file_arr[i+scroll]); }
 				
             }
 
             else {
-                if (i == selected) { printf("\x1b[32m\x1b[47;30m%-49.49s\x1b[0m\n", file_arr[i+scroll]); }
-                else { printf("\x1b[32;1m%-49.49s\x1b[0m\n", file_arr[i+scroll]); }
+                if (i == selected) { printf("\x1b[32m\x1b[47;30m%-47.47s\x1b[0m\n", file_arr[i+scroll]); }
+                else { printf("\x1b[32;1m%-47.47s\x1b[0m\n", file_arr[i+scroll]); }
 				
             }
         }

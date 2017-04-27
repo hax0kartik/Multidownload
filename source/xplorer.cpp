@@ -2,7 +2,7 @@
 #include "dir.h"
 #include "draw.h"
 #include "buttons.h"
-
+#include "gfx.hpp"
 // contains current path
 char current_path[511];
 char current_file[511];
@@ -21,7 +21,7 @@ PrintConsole topScreen, instructionscreen, debugscreen;
 // Max len of file/directory name
 int MAX_DIR_NAME_SIZE = 261;
 // What it says on the tin
-int MAX_FILES_ON_SCREEN = 26;
+int MAX_FILES_ON_SCREEN = 24;
 // ^
 int MAX_PATH_SIZE = 511;
 
@@ -31,11 +31,14 @@ int xplorer(void) {
     consoleInit(GFX_BOTTOM, &debugscreen);
     consoleInit(GFX_BOTTOM, &instructionscreen);
 	consoleInit(GFX_TOP, &topScreen);
-    consoleSetWindow(&instructionscreen, 0, 0, 40, 8);
-    consoleSetWindow(&debugscreen, 0, 9, 40, 21);
+	draw_border(GFX_TOP,0,255,255);
+	draw_border(GFX_BOTTOM,255,255,0);
+	consoleSetWindow(&topScreen, 1, 1, 48, 28);
+	consoleSetWindow(&instructionscreen, 1, 1, 38, 26);
+    consoleSetWindow(&debugscreen, 1, 9, 40, 21);
     consoleSelect(&instructionscreen);
     printf("A - Change Directory/Select file\nB - go up a directory\nDPAD/Circle pad - up and down\nSELECT - use the current location as download location.");
-    printf("\n----------------------------------------");
+    printf("\n--------------------------------------");
 
     consoleSelect(&debugscreen);
     printf("Started xplorer...\n");
