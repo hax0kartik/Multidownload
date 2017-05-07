@@ -14,7 +14,7 @@ int zip_extract(string location,string extract_location)
 {
 	cout<<"File exatraction starting"<<endl;
     // Open the zip file
-    unzFile *zipfile =(void**)unzOpen(location.c_str());
+    unzFile *zipfile =(void**)unzOpen64(location.c_str());
     if ( zipfile == NULL )
     {
         cout<<"Not found"<<endl;
@@ -22,8 +22,8 @@ int zip_extract(string location,string extract_location)
     }
 
     // Get info about the zip file
-    unz_global_info global_info;
-    if ( unzGetGlobalInfo( zipfile, &global_info ) != UNZ_OK )
+    unz_global_info64 global_info;
+    if ( unzGetGlobalInfo64( zipfile, &global_info ) != UNZ_OK )
     {
         cout<<"Could not read file global info"<<endl;
         unzClose( zipfile );
@@ -38,9 +38,9 @@ int zip_extract(string location,string extract_location)
     for ( i = 0; i < global_info.number_entry; ++i )
     {
         // Get info about current file.
-        unz_file_info file_info;
+        unz_file_info64 file_info;
         char filename[ MAX_FILENAME ];
-        if ( unzGetCurrentFileInfo(
+        if ( unzGetCurrentFileInfo64(
             zipfile,
             &file_info,
             filename,
