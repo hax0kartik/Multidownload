@@ -1,199 +1,155 @@
-#---------------------------------------------------------------------------------
-.SUFFIXES:
-#---------------------------------------------------------------------------------
+# This Makefile is an edited version of the file found here:
 
-ifeq ($(strip $(DEVKITARM)),)
-$(error "Please set DEVKITARM in your environment. export DEVKITARM=<path to>devkitARM")
-endif
+# https://github.com/Steveice10/FBI and has been released under MIT Licence as
 
-TOPDIR ?= $(CURDIR)
-include $(DEVKITARM)/3ds_rules
+# follows:
 
-#---------------------------------------------------------------------------------
-# TARGET is the name of the output
-# BUILD is the directory where object files & intermediate files will be placed
-# SOURCES is a list of directories containing source code
-# DATA is a list of directories containing data files
-# INCLUDES is a list of directories containing header files
 #
-# NO_SMDH: if set to anything, no SMDH file is generated.
-# ROMFS is the directory which contains the RomFS, relative to the Makefile (Optional)
-# APP_TITLE is the name of the app stored in the SMDH file (Optional)
-# APP_DESCRIPTION is the description of the app stored in the SMDH file (Optional)
-# APP_AUTHOR is the author of the app stored in the SMDH file (Optional)
-# ICON is the filename of the icon (.png), relative to the project folder.
-#   If not set, it attempts to use one of the following (in this order):
-#     - <Project name>.png
-#     - icon.png
-#     - <libctru folder>/default_icon.png
-#---------------------------------------------------------------------------------
-TARGET		:=	$(notdir $(CURDIR))
-BUILD		:=	build
-SOURCES		:=	source
-DATA		:=	data
-INCLUDES	:=	include
-#ROMFS		:=	romfs
-APP_AUTHOR         :=             Kartik
-APP_TITLE              :=             Multidownload
-APP_DESCRIPTION :=           Download files right on your 3ds!
-#---------------------------------------------------------------------------------
-# options for code generation
-#---------------------------------------------------------------------------------
-ARCH	:=	-march=armv6k -mtune=mpcore -mfloat-abi=hard -mtp=soft
 
-CFLAGS	:=	-g -Wall -O2 -mword-relocations \
-			-fomit-frame-pointer -ffunction-sections \
-			$(ARCH)
+# Copyright © 2015 Steveice10
 
-CFLAGS	+=	$(INCLUDE) -DARM11 -D_3DS
+#
 
-CXXFLAGS	:= $(CFLAGS) -fno-rtti -fexceptions -std=gnu++11
+# Permission is hereby granted, free of charge, to any person obtaining a copy
 
-ASFLAGS	:=	-g $(ARCH)
-LDFLAGS	=	-specs=3dsx.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map)
+# of this software and associated documentation files (the "Software"), to deal
 
-LIBS	:=  -lminizip -lz -lctru -lm 
+# in the Software without restriction, including without limitation the rights
 
-#---------------------------------------------------------------------------------
-# list of directories containing libraries, this must be the top level containing
-# include and lib
-#---------------------------------------------------------------------------------
-LIBDIRS	:= $(CTRULIB)	$(PORTLIBS)						../source	/3ds-ES
-#---------------------------------------------------------------------------------
-# no real need to edit anything past this point unless you need to add additional
-# rules for different file extensions
-#---------------------------------------------------------------------------------
-ifneq ($(BUILD),$(notdir $(CURDIR)))
-#---------------------------------------------------------------------------------
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 
-export OUTPUT	:=	$(CURDIR)/$(TARGET)
-export TOPDIR	:=	$(CURDIR)
+# copies of the Software, and to permit persons to whom the Software is
 
-export VPATH	:=	$(foreach dir,$(SOURCES),$(CURDIR)/$(dir)) \
-			$(foreach dir,$(DATA),$(CURDIR)/$(dir))
+# furnished to do so, subject to the following conditions:
 
-export DEPSDIR	:=	$(CURDIR)/$(BUILD)
+#
 
-CFILES		:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.c)))
-CPPFILES	:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.cpp)))
-SFILES		:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.s)))
-PICAFILES	:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.v.pica)))
-SHLISTFILES	:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.shlist)))
-BINFILES	:=	$(foreach dir,$(DATA),$(notdir $(wildcard $(dir)/*.*)))
+# The above copyright notice and this permission notice shall be included in
 
-#---------------------------------------------------------------------------------
-# use CXX for linking C++ projects, CC for standard C
-#---------------------------------------------------------------------------------
-ifeq ($(strip $(CPPFILES)),)
-#---------------------------------------------------------------------------------
-	export LD	:=	$(CC)
-#---------------------------------------------------------------------------------
-else
-#---------------------------------------------------------------------------------
-	export LD	:=	$(CXX)
-#---------------------------------------------------------------------------------
-endif
-#---------------------------------------------------------------------------------
+# all copies or substantial portions of the Software.
 
-export OFILES	:=	$(addsuffix .o,$(BINFILES)) \
-			$(PICAFILES:.v.pica=.shbin.o) $(SHLISTFILES:.shlist=.shbin.o) \
-			$(CPPFILES:.cpp=.o) $(CFILES:.c=.o) $(SFILES:.s=.o)
+#
 
-export INCLUDE	:=	$(foreach dir,$(INCLUDES),-I$(CURDIR)/$(dir)) \
-			$(foreach dir,$(LIBDIRS),-I$(dir)/include) \
-			-I$(CURDIR)/$(BUILD)
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 
-export LIBPATHS	:=	$(foreach dir,$(LIBDIRS),-L$(dir)/lib)
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 
-ifeq ($(strip $(ICON)),)
-	icons := $(wildcard *.png)
-	ifneq (,$(findstring $(TARGET).png,$(icons)))
-		export APP_ICON := $(TOPDIR)/$(TARGET).png
-	else
-		ifneq (,$(findstring icon.png,$(icons)))
-			export APP_ICON := $(TOPDIR)/icon.png
-		endif
-	endif
-else
-	export APP_ICON := $(TOPDIR)/$(ICON)
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+
+# SOFTWARE.
+
+
+
+# TARGET #
+
+
+
+TARGET := 3DS
+
+LIBRARY := 0
+
+
+
+ifeq ($(TARGET),3DS)
+
+    ifeq ($(strip $(DEVKITPRO)),)
+
+        $(error "Please set DEVKITPRO in your environment. export DEVKITPRO=<path to>devkitPro")
+
+    endif
+
+
+
+    ifeq ($(strip $(DEVKITARM)),)
+
+        $(error "Please set DEVKITARM in your environment. export DEVKITARM=<path to>devkitARM")
+
+    endif
+
 endif
 
-ifeq ($(strip $(NO_SMDH)),)
-	export _3DSXFLAGS += --smdh=$(CURDIR)/$(TARGET).smdh
-endif
-
-ifneq ($(ROMFS),)
-	export _3DSXFLAGS += --romfs=$(CURDIR)/$(ROMFS)
-endif
-
-.PHONY: $(BUILD) clean all
-
-#---------------------------------------------------------------------------------
-all: $(BUILD)
-
-$(BUILD):
-	@[ -d $@ ] || mkdir -p $@
-	@$(MAKE) --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile
-#---------------------------------------------------------------------------------
-send: $(BUILD)
-
-	@3dslink $(TARGET).3dsx	
-#---------------------------------------------------------------------------------
-clean:
-	@echo clean ...
-	@rm -fr $(BUILD) $(TARGET).3dsx $(OUTPUT).smdh $(TARGET).elf
 
 
-#---------------------------------------------------------------------------------
-else
+# COMMON CONFIGURATION #
 
-DEPENDS	:=	$(OFILES:.o=.d)
 
-#---------------------------------------------------------------------------------
-# main targets
-#---------------------------------------------------------------------------------
-ifeq ($(strip $(NO_SMDH)),)
-$(OUTPUT).3dsx	:	$(OUTPUT).elf $(OUTPUT).smdh
-else
-$(OUTPUT).3dsx	:	$(OUTPUT).elf
-endif
 
-$(OUTPUT).elf	:	$(OFILES)
+NAME := multidownload++
 
-#---------------------------------------------------------------------------------
-# you need a rule like this for each extension you use as binary data
-#---------------------------------------------------------------------------------
-%.bin.o	:	%.bin
-#---------------------------------------------------------------------------------
-	@echo $(notdir $<)
-	@$(bin2o)
 
-#---------------------------------------------------------------------------------
-# rules for assembling GPU shaders
-#---------------------------------------------------------------------------------
-define shader-as
-	$(eval CURBIN := $(patsubst %.shbin.o,%.shbin,$(notdir $@)))
-	picasso -o $(CURBIN) $1
-	bin2s $(CURBIN) | $(AS) -o $@
-	echo "extern const u8" `(echo $(CURBIN) | sed -e 's/^\([0-9]\)/_\1/' | tr . _)`"_end[];" > `(echo $(CURBIN) | tr . _)`.h
-	echo "extern const u8" `(echo $(CURBIN) | sed -e 's/^\([0-9]\)/_\1/' | tr . _)`"[];" >> `(echo $(CURBIN) | tr . _)`.h
-	echo "extern const u32" `(echo $(CURBIN) | sed -e 's/^\([0-9]\)/_\1/' | tr . _)`_size";" >> `(echo $(CURBIN) | tr . _)`.h
-endef
 
-%.shbin.o : %.v.pica %.g.pica
-	@echo $(notdir $^)
-	@$(call shader-as,$^)
+BUILD_DIR := build
 
-%.shbin.o : %.v.pica
-	@echo $(notdir $<)
-	@$(call shader-as,$<)
+OUTPUT_DIR := output
 
-%.shbin.o : %.shlist
-	@echo $(notdir $<)
-	@$(call shader-as,$(foreach file,$(shell cat $<),$(dir $<)/$(file)))
+INCLUDE_DIRS := source/include
 
--include $(DEPENDS)
+SOURCE_DIRS := source
 
-#---------------------------------------------------------------------------------------
-endif
-#---------------------------------------------------------------------------------------
+
+
+EXTRA_OUTPUT_FILES :=
+
+
+
+LIBRARY_DIRS := $(DEVKITPRO)/libctru 
+
+LIBRARIES := minizip z ctru m
+
+
+
+BUILD_FLAGS := -Wall -Wextra
+
+RUN_FLAGS :=
+
+OUTPUT_ZIP_FILE := 0
+
+VERSION_MAJOR := 3
+
+VERSION_MINOR := 2
+
+VERSION_MICRO := 0
+
+
+
+# 3DS CONFIGURATION #
+
+
+
+TITLE := $(NAME)
+
+DESCRIPTION := Download files straight onto your 3ds!
+
+AUTHOR := Kartik
+
+PRODUCT_CODE := CTR-E-DOWN
+
+UNIQUE_ID := 0x1034
+
+SYSTEM_MODE := 64MB
+
+SYSTEM_MODE_EXT := Legacy
+
+CPU_SPEED := 804MHz
+
+ROMFS_DIR := romfs
+
+BANNER_AUDIO := resources/audio.wav
+
+BANNER_IMAGE := resources/banner.png
+
+ICON := resources/icon.png
+
+
+
+# INTERNAL #
+
+
+
+include buildtools/make_base

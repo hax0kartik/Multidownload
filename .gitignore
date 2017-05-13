@@ -1,9 +1,9 @@
 #exclude
 
 /build/*
-*.3dsx
-*.cia
-*.icn
-*.bnr
+/output/3ds-arm/multidownload++/*
+/output/3ds-arm/*
+output/3ds-arm/multidownload.3ds
+/resources/banner.bin
+/resources/icon.bin
 *.elf
-*.smdh
