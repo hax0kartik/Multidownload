@@ -1,4 +1,16 @@
 #include <string>
 #include <cstring>
-void wf(std::string a,uint64_t *b,size_t size);
-std::string rf(std::string a);
+#include <cstdio>
+#include <fstream>
+using namespace std;
+class fs{
+	public:
+	void openfile(string location);
+	void writefile(const char *buffer, size_t size);
+	void writefile(string location, string buffer);
+	void closefile();
+	string readfile(string place);
+	private:
+	FILE *fp;
+};
+	

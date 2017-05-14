@@ -80,7 +80,7 @@ endif
 
 
 
-NAME := multidownload++
+NAME := Multidownload++
 
 
 
@@ -108,8 +108,6 @@ BUILD_FLAGS := -Wall -Wextra
 
 RUN_FLAGS :=
 
-OUTPUT_ZIP_FILE := 0
-
 VERSION_MAJOR := 3
 
 VERSION_MINOR := 2
@@ -130,7 +128,7 @@ AUTHOR := Kartik
 
 PRODUCT_CODE := CTR-E-DOWN
 
-UNIQUE_ID := 0x1034
+UNIQUE_ID := 0x1030
 
 SYSTEM_MODE := 64MB
 

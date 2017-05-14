@@ -18,7 +18,8 @@ void menu()
 	consoleSetWindow(&bottom, 1, 1, 38, 28);
 	cout<<"\x1b[14;12H\x1b[1;37mWelcome to Multidownload++"<<endl;
 	cout<<"\x1b[15;17HMade by:-Kartik"<<endl;
-	ab=rf("sdmc:/multi.cfg");
+	fs f;
+	ab=f.readfile("sdmc:/multi.cfg");
 	if(ab=="error")ab="Not set";
 	cout<<"\x1b[16;11HDownload Location:- "<< ab <<endl;
 	consoleSelect(&bottom);

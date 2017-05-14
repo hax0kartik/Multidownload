@@ -64,7 +64,9 @@ int main()
 			cout<<"Xplorer";
 			xplorer();
 			cout<<"\x1b[2J";
-			wf("sdmc:/multi.cfg",(u64*)current_path,strlen(current_path));
+			std::string path (current_path);
+			fs f;
+			f.writefile("sdmc:/multi.cfg", path);
 			cout<<"Current path:"<<current_path;
 			menu();
 		}

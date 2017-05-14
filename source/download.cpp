@@ -13,8 +13,7 @@ Result http_download(string url,string loca)
 {
 	Result ret = 0;
 	u32 statuscode=0;
-	u32 contentsize=0, readsize=0, size=0;
-	u64* buf;u64 *lastbuf;
+	u32 contentsize=0, readsize=0, size=0x1000;
 	char a[2048];
 	string strNew;
 	httpcContext context;
@@ -22,6 +21,7 @@ Result http_download(string url,string loca)
 	consoleSelect(&top);
 	cout<<"\x1b[2J";
 	pBar bar;
+	fs out;
 	consoleSelect(&bottom);
 	cout<<"\x1b[2J";
 	bar.length_set(contentsize);
@@ -98,48 +98,7 @@ Result http_download(string url,string loca)
 	cout<<"\x1b[33;1msize(may be wrong) : \x1b[37;1m"<<contentsize<<endl;
 	gfxFlushBuffers();
 	gfxSwapBuffers();
-	buf = (u64*)malloc(0x1000);
-	if(buf==NULL){
-		httpcCloseContext(&context);
-		return 1;
-	}
-	bar.length_set(contentsize);
-	consoleSelect(&bottom);
-	bar.print();
-	do {
-		// This download loop resizes the buffer as data is read.
-		ret = httpcDownloadData(&context,(u8*) buf+size, 0x1000, &readsize);
-		size += readsize;
-		if(contentsize!=0){	
-		bar.update(readsize);
-		bar.print();
-		}
-		else{ ; }
-		if (ret == (s32)HTTPC_RESULTCODE_DOWNLOADPENDING){
-				lastbuf = buf; // Save the old pointer, in case realloc() fails.
-				buf = (u64*)realloc(buf, size + 0x1000);
-				if(buf==NULL){
-					httpcCloseContext(&context);
-					free(lastbuf);
-					return 1;
-				}
-			}
-	} while (ret == (s32)HTTPC_RESULTCODE_DOWNLOADPENDING);
-	consoleSelect(&top);
-	if(ret!=0){
-		httpcCloseContext(&context);
-		free(buf);
-		return 1;
-	}
-
-	// Resize the buffer back down to our actual final size
-	lastbuf = buf;
-	buf = (u64*)realloc(buf, size);
-	if(buf==NULL){ // realloc() failed.
-		httpcCloseContext(&context);
-		free(lastbuf);
-		return 1;
-	}
+	
 	//We'll now check for invalid characters in filename(unlikely to occur)
 	if(strNew.find("/")!=string::npos||strNew.find("#")!=string::npos||strNew.find("\\")!=string::npos||strNew.find(":")!=string::npos||strNew.find("*")!=string::npos
 	||strNew.find("?")!=string::npos||strNew.find("\"")!=string::npos||strNew.find("<")!=string::npos||strNew.find(">")!=string::npos||strNew.find("|")!=string::npos
@@ -148,12 +107,36 @@ Result http_download(string url,string loca)
 		strNew = tl(1,"Please enter the filename along with the extension.Eg:-multi.zip,k.3dsx,file.pdf,etc.","OK");
 		cout<<strNew<<endl;
 	}
-   //filename 
 	string location=loca + strNew;
 	consoleSelect(&top);
 	cout<<"\r\x1b[33;1mFile saved as : \x1b[37;1m"<<location<<endl;
-	wf(location, buf, size);
-	free(buf);
+	out.openfile(location);
+	bar.length_set(contentsize);
+	consoleSelect(&bottom);
+	bar.print();
+	do
+	{
+		u8 *buf = (u8*)linearAlloc(size);
+		memset(buf, 0, size);
+		ret = httpcDownloadData(&context, buf, 0x1000, &readsize);
+		size += readsize;
+		if(contentsize!=0){
+		bar.update(readsize);
+		bar.print();
+		}
+		else{
+			;
+		}
+        out.writefile((const char*)buf,(size_t)readsize);
+		linearFree(buf);
+    }while(ret == (s32)HTTPC_RESULTCODE_DOWNLOADPENDING);
+	out.closefile();
+	consoleSelect(&top);
+	if(ret!=0){
+		httpcCloseContext(&context);
+		return 1;
+	}
+
 	if(location.find(".zip")!=string::npos)
 	{	cout<<"Zip file found"<<endl;
 		int i = zip_extract(location, loca);
