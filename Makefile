@@ -100,7 +100,7 @@ EXTRA_OUTPUT_FILES :=
 
 LIBRARY_DIRS := $(DEVKITPRO)/libctru 
 
-LIBRARIES := minizip z ctru m
+LIBRARIES := archive z ctru m
 
 
 

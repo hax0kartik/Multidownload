@@ -1,122 +1,87 @@
-#include <3ds.h>
-#include <iostream>
-#include <string>
-#include <iomanip>
-#include <minizip/unzip.h>
+
+#include <sys/types.h>
 #include <sys/stat.h>
+#include <3ds.h>
 #include "extract_zip.hpp"
-#define dir_delimter '/'
-#define MAX_FILENAME 512
-#define READ_SIZE 8192
+#include <libarchive/archive.h>
+#include <libarchive/archive_entry.h>
+#include <fcntl.h>
+#include <cstdio>
+#include <cstdlib>
 #include <cstring>
-using namespace std; 
-int zip_extract(string location,string extract_location)
+#include <string>
+#include <unistd.h>
+static int copy_data(struct archive *ar, struct archive *aw)
 {
-	cout<<"File exatraction starting"<<endl;
-    // Open the zip file
-    unzFile *zipfile =(void**)unzOpen64(location.c_str());
-    if ( zipfile == NULL )
-    {
-        cout<<"Not found"<<endl;
-        return -1;
+  int r;
+  const void *buff;
+  size_t size;
+  int64_t offset;
+
+  for (;;) {
+    r = archive_read_data_block(ar, &buff, &size, &offset);
+    if (r == ARCHIVE_EOF)
+      return (ARCHIVE_OK);
+    if (r < ARCHIVE_OK)
+      return (r);
+    r = archive_write_data_block(aw, buff, size, offset);
+    if (r < ARCHIVE_OK) {
+      printf("%s\n", archive_error_string(aw));
+      return (r);
     }
+  }
+}
+void extract(std::string filename)
+{
+  struct archive *a;
+  struct archive *ext;
+  struct archive_entry *entry;
+  int flags;
+  int r;
 
-    // Get info about the zip file
-    unz_global_info64 global_info;
-    if ( unzGetGlobalInfo64( zipfile, &global_info ) != UNZ_OK )
-    {
-        cout<<"Could not read file global info"<<endl;
-        unzClose( zipfile );
-        return -1;
+  /* Select which attributes we want to restore. */ 
+  flags = ARCHIVE_EXTRACT_PERM;
+  flags |= ARCHIVE_EXTRACT_ACL;
+  flags |= ARCHIVE_EXTRACT_FFLAGS;
+
+  a = archive_read_new();
+  archive_read_support_format_all(a);
+  ext = archive_write_disk_new();
+  archive_write_disk_set_options(ext, flags);
+  //archive_write_disk_set_standard_lookup(ext);
+  if ((r = archive_read_open_filename(a, filename.c_str(), 10240)))
+    printf("Couldn't find file");
+  for (;;) {
+    r = archive_read_next_header(a, &entry);
+    if (r == ARCHIVE_EOF)
+      break;
+	if(r == ARCHIVE_OK)
+	{
+		printf("%s\n",archive_entry_pathname(entry));
+	}
+    if (r < ARCHIVE_OK)
+      printf( "%s\n", archive_error_string(a));
+    if (r < ARCHIVE_WARN)
+        return;
+    r = archive_write_header(ext, entry);
+    if (r < ARCHIVE_OK)
+      printf("%s\n", archive_error_string(ext));
+    else if (archive_entry_size(entry) > 0) {
+      r = copy_data(a, ext);
+      if (r < ARCHIVE_OK)
+        printf("%s\n", archive_error_string(ext));
+      if (r < ARCHIVE_WARN)
+        return;
     }
-
-    // Buffer to hold data read from the zip file.
-    char read_buffer[ READ_SIZE ];
-
-    // Loop to extract all files
-    uLong i;
-    for ( i = 0; i < global_info.number_entry; ++i )
-    {
-        // Get info about current file.
-        unz_file_info64 file_info;
-        char filename[ MAX_FILENAME ];
-        if ( unzGetCurrentFileInfo64(
-            zipfile,
-            &file_info,
-            filename,
-            MAX_FILENAME,
-            NULL, 0, NULL, 0 ) != UNZ_OK )
-        {
-            cout<<"could not read file info"<<endl;
-            unzClose( zipfile );
-            return -1;
-        }
-		string ext = (filename);
-		ext = extract_location + ext;
-        // Check if this entry is a directory or file.
-        const size_t filename_length = strlen( filename );
-        if ( filename[ filename_length-1 ] == dir_delimter )
-        {
-            // Entry is a directory, so create it.
-            cout<<"dir:"<<ext<<endl;
-            mkdir(ext.c_str() ,0777);
-        }
-        else
-        {
-            // Entry is a file, so extract it.
-            cout<<"file:"<<ext<<endl;
-            if ( unzOpenCurrentFile( zipfile ) != UNZ_OK )
-            {
-                cout<<"could not open file"<<endl;
-                unzClose( zipfile );
-                return -1;
-            }
-			
-            // Open a file to write out the data.
-            FILE *out = fopen(ext.c_str(), "wb");
-            if ( out == NULL )
-            {
-                cout<<"could not open destination file"<<endl;
-                unzCloseCurrentFile( zipfile );
-                unzClose( zipfile );
-                return -1;
-            }
-
-            int error = UNZ_OK;
-            do    
-            {
-                error = unzReadCurrentFile( zipfile, read_buffer, READ_SIZE );
-                if ( error < 0 )
-                {
-                    cout<<"error :"<<error<<endl;
-                    unzCloseCurrentFile( zipfile );
-                    unzClose( zipfile );
-                    return -1;
-                }
-
-                // Write data to file.
-                if ( error > 0 )
-                {
-                    fwrite( read_buffer, error, 1, out ); // You should check return of fwrite...
-                }
-            } while ( error > 0 );
-
-            fclose( out );
-        }
-
-        unzCloseCurrentFile( zipfile );
-
-        // Go the the next entry listed in the zip file.
-        if ( ( i+1 ) < global_info.number_entry )
-        {
-            if ( unzGoToNextFile( zipfile ) != UNZ_OK )
-            {
-                cout<<"Cound not read next file\n"<<endl;
-                unzClose( zipfile );
-                return -1;
-            }
-        }
-    }
-    unzClose( zipfile );
-	return 0;
+    r = archive_write_finish_entry(ext);
+    if (r < ARCHIVE_OK)
+      printf("%s\n", archive_error_string(ext));
+    if (r < ARCHIVE_WARN)
+		return;
+  }
+  archive_read_close(a);
+  archive_read_free(a);
+  archive_write_close(ext);
+  archive_write_free(ext);
+  return;
 }

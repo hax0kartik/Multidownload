@@ -137,13 +137,9 @@ Result http_download(string url,string loca)
 		return 1;
 	}
 
-	if(location.find(".zip")!=string::npos)
+	if((location.find(".zip")!=string::npos)||(location.find(".rar")!=string::npos))
 	{	cout<<"Zip file found"<<endl;
-		int i = zip_extract(location, loca);
-		if(i==0)
-		cout<<"Extraction Successful"<<endl;
-		else
-		cout<<"Extraction Failed but zip file saved"<<endl;	
+		extract(location);
 	}
 	httpcCloseContext(&context);
 	return 0;
