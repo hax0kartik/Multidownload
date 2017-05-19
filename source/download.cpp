@@ -137,8 +137,8 @@ Result http_download(string url,string loca)
 		return 1;
 	}
 
-	if((location.find(".zip")!=string::npos)||(location.find(".rar")!=string::npos))
-	{	cout<<"Zip file found"<<endl;
+	if((location.find(".zip")!=string::npos)||(location.find(".rar")!=string::npos)||(location.find(".tar")!=string::npos))
+	{	cout<<"Archive file found"<<endl;
 		extract(location);
 	}
 	httpcCloseContext(&context);
