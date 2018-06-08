@@ -15,10 +15,15 @@ class DownloadManager
     void SetWriteFunctionCallback(size_t (*write_callback)(char *ptr, size_t size, size_t nmemb, void *userdata), void *userdata);
     std::pair<CURLcode, std::string> DownloadDirectly(void);
     std::pair<CURLcode, std::string> Perform();
+    void ExtractFileIfArchive(bool _extract = false)
+    {
+        this->extract = _extract; 
+    }
     private:
     std::vector<std::string> headers;
     std::string download_location;
     CURL *curl_handle = nullptr;
+    bool extract = false;
     CURLcode ret;
     Result retcode = 0;
 };

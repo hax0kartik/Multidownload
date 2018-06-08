@@ -56,7 +56,6 @@ pair<Result, std::string> DownloadManager::Initialize(void)
     curl_easy_setopt(this->curl_handle, CURLOPT_MAXREDIRS, 50L);
     curl_easy_setopt(this->curl_handle, CURLOPT_SSL_VERIFYPEER, 0L);
     curl_easy_setopt(this->curl_handle, CURLOPT_VERBOSE, 1L);
-
     this->SetHeaderFunctionCallback(header_function, &this->headers);
     
     return make_pair((Result)0, "Init successful");

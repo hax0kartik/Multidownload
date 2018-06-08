@@ -36,6 +36,12 @@
         "vector": "cpp",
         "functional": "cpp",
         "limits": "cpp",
-        "typeinfo": "cpp"
+        "typeinfo": "cpp",
+        "chrono": "cpp",
+        "codecvt": "cpp",
+        "deque": "cpp",
+        "filesystem": "cpp",
+        "numeric": "cpp",
+        "ratio": "cpp"
     },
 }

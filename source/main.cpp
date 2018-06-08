@@ -98,16 +98,21 @@ int main()
         if(isWithinTouchbox(&touchpos, 74, 14, 172, 60))
         {
             util.InitKeyboard();
-            if(!util.ShowKeyboard("Enter A URL")) continuex;
+            if(!util.ShowKeyboard("Enter A URL")) continue;
             std::string url = util.GetKeyboardData();
             DownloadManager dm;
             auto ret = dm.Initialize();
             printf("Download Begin\n");
             dm.SetURL(url);
             dm.SetDownloadLocation(dlloc);
+            dm.ExtractFileIfArchive(true);
             uiSetScreenBottom((func_t)drawProgressBar, to_pass_1);
             dm.SetProgressMeterCallback(progress_callback, to_pass_1);
             auto res = dm.DownloadDirectly();
+            // We'll reuse the url string
+            url = "Download :" + res.second;
+            stringToC2D(url.c_str(), &text[1]);
+            *to_pass_1 = make_tuple(316, &text[1]);
             //DownloadManager::DownloadURL(url);
         }
         if(isWithinTouchbox(&touchpos, 30, 86, 260, 60))
@@ -122,7 +127,13 @@ int main()
 
         }
         //printf("You are within Download Location\n");
-        if(isWithinTouchbox(&touchpos, 54, 158, 214, 60)){}
+        if(isWithinTouchbox(&touchpos, 54, 158, 214, 60))
+        {
+            util.qrInit();
+            //util.qrScan();
+            //std::string url = util.getDecodedURL();
+            // TODO
+        }
         //printf("You are within Qr Code\n");
     }
 
