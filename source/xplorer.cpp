@@ -90,9 +90,9 @@ std::string open_xplorer()
     auto to_pass = &p;
     uiSetScreenTop((func_t)drawDirectory, to_pass); 
     int selected = 0;
-    std::vector <int> old_selected;
+    std::vector <int> old_selected (0);
     int scroll = 0;
-    std::vector <int> old_scroll;
+    std::vector <int> old_scroll (0);
     while(aptMainLoop())
     {
         hidScanInput();
@@ -139,13 +139,16 @@ std::string open_xplorer()
         if(keysDown() & KEY_B)
         {
             cur_directory = cur_directory.substr(0, cur_directory.find_last_of("/"));
-            if(cur_directory.empty()) cur_directory = "/";
+            if(cur_directory.empty()){ cur_directory = "/";}
             read_directory(cur_directory, files);
             prepareDirectoryForDraw(files, files_c2d);
-            selected = old_selected.back(); // Give us the last pos of the selector and then remove it from vector
-            old_selected.pop_back();
-            scroll = old_scroll.back();
-            old_scroll.pop_back();
+            if(!old_selected.empty())
+            {
+                selected = old_selected.back(); // Give us the last pos of the selector and then remove it from vector
+                old_selected.pop_back();
+                scroll = old_scroll.back();
+                old_scroll.pop_back();
+            }
             *to_pass = std::make_tuple(files_c2d, (int)files.size(), scroll, selected);
         }
 

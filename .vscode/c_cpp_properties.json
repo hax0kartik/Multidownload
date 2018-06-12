@@ -17,7 +17,7 @@
             "intelliSenseMode": "clang-x64",
             "compilerPath": "C:/devkitpro/devkitARM/bin/arm-none-eabi-gcc",
             "cStandard": "c99",
-            "cppStandard": "c++11"
+            "cppStandard": "c++17"
         }
     ],
     "version": 4

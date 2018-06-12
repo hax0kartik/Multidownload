@@ -8,6 +8,8 @@
 #include "download.hpp"
 #include "xplorer.h"
 
+int __stacksize__ = 64 * 1024;
+
 using namespace std;
 C2D_TextBuf text_buf;
 extern void stringToC2D(const char* string, C2D_Text *text);
@@ -84,7 +86,7 @@ int main()
 
     uiSetScreenTop((func_t)drawImageAndDownload, to_pass);
     uiSetScreenBottom((func_t)drawImage, &images.second);
-    //ui.debug = true;
+    ui.debug = true;
     ui.run = true;
     ui.uiThreadHandle = threadCreate(uiThread, nullptr, 8 * 1024, 0x24, -2, true);
    // ui.hid_func = ini_func;
@@ -130,8 +132,8 @@ int main()
         if(isWithinTouchbox(&touchpos, 54, 158, 214, 60))
         {
             util.qrInit();
-            //util.qrScan();
-            //std::string url = util.getDecodedURL();
+            util.qrScan();
+            std::string url = util.getDecodedURL();
             // TODO
         }
         //printf("You are within Qr Code\n");

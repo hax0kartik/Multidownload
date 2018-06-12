@@ -42,6 +42,7 @@
         "deque": "cpp",
         "filesystem": "cpp",
         "numeric": "cpp",
-        "ratio": "cpp"
+        "ratio": "cpp",
+        "cinttypes": "cpp"
     },
 }
