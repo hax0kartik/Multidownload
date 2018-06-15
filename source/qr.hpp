@@ -13,18 +13,20 @@ class qr
     Result qrScan(void);
     std::string getDecodedURL(void)
     {
-        return url;
+        return std::string(url);
     }
     private:
     struct quirc *context;
     u16 *cameraBuffer;
-    std::string url;
+    char *url;
     int TOPSCREEN_HEIGHT = 400;
     int TOPSCREEN_WIDTH = 240;
     C3D_Tex *tex;
     C2D_Image image;
-    Handle events[2] = {0};
+    Handle events[3] = {0};
     Handle lock;
+    bool *done;
     Result res;
     s32 transferUnit;
+    Thread qrThreadHandle;
 };

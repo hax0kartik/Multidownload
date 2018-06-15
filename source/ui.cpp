@@ -42,10 +42,10 @@ void uiThread(void *arg)
         C3D_FrameBegin(C3D_FRAME_SYNCDRAW);
         if(!ui.debug)C2D_TargetClear(bottom, C2D_Color32(32, 38, 100, 0xFF));
         if(!ui.debug)C2D_SceneBegin(bottom);
-	 	if(!ui.debug)uibot_func();
+	 	if(!ui.debug && ui.botfunc)uibot_func();
         C2D_TargetClear(top, C2D_Color32(32, 38, 100, 0xFF));
         C2D_SceneBegin(top);
-        uitop_func();
+        if(ui.topfunc)uitop_func();
 		C3D_FrameEnd(0);
     }
 }

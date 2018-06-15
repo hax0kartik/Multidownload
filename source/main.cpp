@@ -86,9 +86,9 @@ int main()
 
     uiSetScreenTop((func_t)drawImageAndDownload, to_pass);
     uiSetScreenBottom((func_t)drawImage, &images.second);
-    ui.debug = true;
+   // ui.debug = true;
     ui.run = true;
-    ui.uiThreadHandle = threadCreate(uiThread, nullptr, 8 * 1024, 0x24, -2, true);
+    ui.uiThreadHandle = threadCreate(uiThread, nullptr, 8 * 1024, 0x20, -2, true);
    // ui.hid_func = ini_func;
     utils util;
     touchPosition touchpos;
@@ -131,9 +131,12 @@ int main()
         //printf("You are within Download Location\n");
         if(isWithinTouchbox(&touchpos, 54, 158, 214, 60))
         {
-            util.qrInit();
+            Result res;
+            if((res = util.qrInit()) != 0) {printf("Result : %08lX", res);}
             util.qrScan();
             std::string url = util.getDecodedURL();
+            *to_pass = std::make_tuple(images.first, &text[0]);
+            uiSetScreenTop((func_t)drawImageAndDownload, to_pass);
             // TODO
         }
         //printf("You are within Qr Code\n");
