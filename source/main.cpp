@@ -6,9 +6,7 @@
 #include "ui.h"
 #include "utils.h"
 #include "download.hpp"
-#include "xplorer.h"
-
-int __stacksize__ = 64 * 1024;
+//int __stacksize__ = 64 * 1024;
 
 using namespace std;
 C2D_TextBuf text_buf;
@@ -60,6 +58,7 @@ int progress_callback(void *clientp,double dltotal,double dlnow,double ultotal,d
     *p = make_tuple((dlnow/dltotal) * 316, std::get<1>(*p));
     return 0;
 }
+
 int main()
 {
     romfsInit();
@@ -77,20 +76,22 @@ int main()
     auto to_pass_1 = &p1;
 
     const char * dl = "Download Location: ";
-    std::string dlloc = "/";
+    utils util;
+    std::string dlloc = util.ReadDownloadLocationFromConfig();
+    
     C2D_TextBufClear(text_buf2);
     C2D_TextParse(&text[0], text_buf2, std::string(dl + dlloc).c_str());
     C2D_TextOptimize(&text[0]);
+    
     auto p = std::make_tuple(images.first, &text[0]);
     auto to_pass = &p;
 
     uiSetScreenTop((func_t)drawImageAndDownload, to_pass);
     uiSetScreenBottom((func_t)drawImage, &images.second);
-   // ui.debug = true;
+    //ui.debug = true;
     ui.run = true;
     ui.uiThreadHandle = threadCreate(uiThread, nullptr, 8 * 1024, 0x20, -2, true);
    // ui.hid_func = ini_func;
-    utils util;
     touchPosition touchpos;
     while(aptMainLoop())
     {
@@ -102,15 +103,14 @@ int main()
             util.InitKeyboard();
             if(!util.ShowKeyboard("Enter A URL")) continue;
             std::string url = util.GetKeyboardData();
-            DownloadManager dm;
-            auto ret = dm.Initialize();
+            auto ret = util.dm.Initialize();
             printf("Download Begin\n");
-            dm.SetURL(url);
-            dm.SetDownloadLocation(dlloc);
-            dm.ExtractFileIfArchive(true);
+            util.dm.SetURL(url);
+            util.dm.SetDownloadLocation(dlloc);
+            util.dm.ExtractFileIfArchive(true);
             uiSetScreenBottom((func_t)drawProgressBar, to_pass_1);
-            dm.SetProgressMeterCallback(progress_callback, to_pass_1);
-            auto res = dm.DownloadDirectly();
+            util.dm.SetProgressMeterCallback(progress_callback, to_pass_1);
+            auto res = util.dm.DownloadDirectly();
             // We'll reuse the url string
             url = "Download :" + res.second;
             stringToC2D(url.c_str(), &text[1]);
@@ -119,11 +119,14 @@ int main()
         }
         if(isWithinTouchbox(&touchpos, 30, 86, 260, 60))
         {
-            dlloc = open_xplorer();
+            util.xp.open();
+            dlloc = util.xp.getSelectedLocation();
+            //util.WriteDownloadLocationToConfig(dlloc);
             uiSetScreenBottom((func_t)drawImage, &images.second);
             C2D_TextBufClear(text_buf2);
             C2D_TextParse(&text[0], text_buf2, std::string(dl + dlloc).c_str());
             C2D_TextOptimize(&text[0]);
+            
             *to_pass = std::make_tuple(images.first, &text[0]);
             uiSetScreenTop((func_t)drawImageAndDownload, to_pass);
 
@@ -135,8 +138,20 @@ int main()
             if((res = util.qrInit()) != 0) {printf("Result : %08lX", res);}
             util.qrScan();
             std::string url = util.getDecodedURL();
+            fprintf(stderr, "Back in main function");
+            fprintf(stderr, "URL: %s", url.c_str());
             *to_pass = std::make_tuple(images.first, &text[0]);
             uiSetScreenTop((func_t)drawImageAndDownload, to_pass);
+            util.dm.Initialize();
+            util.dm.SetURL(url);
+            util.dm.SetDownloadLocation(dlloc);
+            util.dm.ExtractFileIfArchive(true);
+            uiSetScreenBottom((func_t)drawProgressBar, to_pass_1);
+            util.dm.SetProgressMeterCallback(progress_callback, to_pass_1);
+            auto ret = util.dm.DownloadDirectly();
+            url = "Download :"  + ret.second;
+            stringToC2D(url.c_str(), &text[1]);
+            *to_pass_1 = make_tuple(316, &text[1]);
             // TODO
         }
         //printf("You are within Qr Code\n");

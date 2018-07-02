@@ -18,14 +18,14 @@ class qr
     private:
     struct quirc *context;
     u16 *cameraBuffer;
-    char *url;
+    char *url = nullptr;
     int TOPSCREEN_HEIGHT = 400;
     int TOPSCREEN_WIDTH = 240;
     C3D_Tex *tex;
     C2D_Image image;
     Handle events[3] = {0};
     Handle lock;
-    bool *done;
+    bool done;
     Result res;
     s32 transferUnit;
     Thread qrThreadHandle;

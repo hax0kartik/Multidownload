@@ -35,7 +35,8 @@ void uiThread(void *arg)
 
     C3D_RenderTarget* top = C2D_CreateScreenTarget(GFX_TOP, GFX_LEFT);
     C3D_RenderTarget* bottom = C2D_CreateScreenTarget(GFX_BOTTOM, GFX_LEFT);
-    if(ui.debug) { consoleInit(GFX_BOTTOM, NULL); printf("Console Attached"); }
+    if(ui.debug) { consoleInit(GFX_BOTTOM, NULL); printf("Console Attached"); consoleDebugInit(debugDevice_CONSOLE);}
+    else {consoleDebugInit(debugDevice_SVC); fprintf(stderr, "DEBUG init");}
     while(aptMainLoop() && ui.run)
     {
         svcWaitSynchronization(ui.event, U64_MAX);

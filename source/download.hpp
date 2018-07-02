@@ -1,3 +1,4 @@
+#pragma once
 #include <curl/curl.h>
 #include <3ds.h>
 #include <vector>

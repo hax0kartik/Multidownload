@@ -1,6 +1,7 @@
 #include "qr.hpp"
 #include "ui.h"
 #include <tuple>
+
 #define RESULT(x) if(x != 0) return x;
 #define WAIT_TIMEOUT 1000000000ULL
 
@@ -20,7 +21,7 @@ void DrawImageOnScreen(std::tuple <C2D_Image, u16 **, Handle *, bool *> *pair)
     auto lock = std::get<2>(arg);
     auto done = std::get<3>(arg);
     if(*done == true) return;
-    svcCreateMutex(lock, true);
+    svcWaitSynchronization(*lock, U64_MAX);
    // printf("Mutex created by uiThread\n");
     for(u32 x = 0; x < 400; x++)
     {
@@ -36,14 +37,13 @@ void DrawImageOnScreen(std::tuple <C2D_Image, u16 **, Handle *, bool *> *pair)
     C2D_DrawImageAt(image, 0.0f, 0.0f, 0.5f, NULL, 1.0f, 1.0f);
 }
 
-static void qrThread(std::tuple<u16 **, char **, struct quirc *, Handle>*args)
+static void qrThread(std::tuple<u16 **, char **, struct quirc *, Handle *>*args)
 {
     u16 **cameraBuffer_p = std::get<0>(*args);
     char **url = std::get<1>(*args);
     struct quirc *context =  std::get<2>(*args);
-    Handle done = std::get<3>(*args);
-
-    //printf("QUIRC\n");
+    Handle *done = std::get<3>(*args);
+    fprintf(stderr, "QUIRC\n");
     while(true)
     {
         u16 *cameraBuffer = *cameraBuffer_p;
@@ -67,17 +67,17 @@ static void qrThread(std::tuple<u16 **, char **, struct quirc *, Handle>*args)
             {
                 *url = (char*)malloc(scan_data.payload_len);
                 memcpy(*url, &scan_data.payload, scan_data.payload_len);
-                printf("SCAN DATA: %s\n", *url);
-                svcSignalEvent(done);
+                svcSignalEvent(*done);
+                break;
             }
         }
     }
-    free(image);
-    quirc_destroy(context);
+    threadExit(0);
 }
+
 Result qr::qrInit(void)
 {
-    svcCreateEvent(&this->events[2], RESET_STICKY);
+    svcCreateEvent(&this->events[2], RESET_ONESHOT);
     this->context = quirc_new();
     quirc_resize(this->context, 400, 240);
     this->cameraBuffer = (u16*)calloc(1, this->TOPSCREEN_HEIGHT * this->TOPSCREEN_WIDTH * sizeof(u16));
@@ -124,14 +124,15 @@ Result qr::qrScan(void)
 {
     //Create one more thread for qr decode
     this->events[0] = 0;
+    svcCreateMutex(&this->lock, false);
     CAMU_SetReceiving(&this->events[0], this->cameraBuffer, PORT_CAM1, 400 * 240 * sizeof(u16), (s16)this->transferUnit);
     svcWaitSynchronization(this->events[0], WAIT_TIMEOUT);
     auto pair = std::make_tuple(this->image, &this->cameraBuffer, &this->lock, this->done);
     auto to_pass = &pair;
-    auto to_pass_to_qrThread = std::make_tuple(&this->cameraBuffer, &this->url, this->context, this->events[2]);
-    this->qrThreadHandle = threadCreate((ThreadFunc)qrThread, &to_pass_to_qrThread, 64 * 1024, 0x30, -2, false);
+    auto to_pass_to_qrThread = std::make_tuple(&this->cameraBuffer, &this->url, this->context, &this->events[2]);
+    this->qrThreadHandle = threadCreate((ThreadFunc)qrThread, &to_pass_to_qrThread, 64 * 1024, 0x32, -2, true);
     uiSetScreenTop((func_t)DrawImageOnScreen, to_pass);
-    while(true)
+    while(!this->done)
     {
         s32 index = 0;
         bool busy;
@@ -150,23 +151,21 @@ Result qr::qrScan(void)
                 CAMU_StartCapture(PORT_CAM1);
                 break;
             case 2:
-                threadJoin(this->qrThreadHandle, U64_MAX);
-                threadFree(this->qrThreadHandle);
                 for (int i = 0; i < 3; i++) svcCloseHandle(i);
                 CAMU_StopCapture(PORT_CAM1);
                 while(R_SUCCEEDED(CAMU_IsBusy(&busy, PORT_CAM1)) && busy) svcSleepThread(1000000);
                 CAMU_ClearBuffer(PORT_CAM1);
                 CAMU_Activate(SELECT_NONE);
                 camExit();
+                svcReleaseMutex(this->lock);
                 svcCloseHandle(this->lock);
                 free(this->cameraBuffer);
                 free(this->tex);
+                this->done = true;
                 break;
         }
-        if(this->done == true)  break;
         svcReleaseMutex(this->lock);
-        svcCreateMutex(&this->lock, true);
-       // printf("Mutex created by main thread");
+        svcWaitSynchronization(this->lock, U64_MAX);
         CAMU_SetReceiving(&this->events[0], this->cameraBuffer, PORT_CAM1, 400 * 240 * sizeof(u16), (s16)this->transferUnit);
     }
     return 0;

@@ -64,6 +64,7 @@ pair<Result, std::string> DownloadManager::Initialize(void)
 
 void DownloadManager::SetURL(std::string url, std::string userAgent)
 {
+    fprintf(stderr, "SETURL: %s", url.c_str());
     curl_easy_setopt(this->curl_handle, CURLOPT_URL, url.c_str());
     curl_easy_setopt(this->curl_handle, CURLOPT_USERAGENT, userAgent.c_str());
 }

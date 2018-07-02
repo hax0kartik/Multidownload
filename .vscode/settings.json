@@ -43,6 +43,7 @@
         "filesystem": "cpp",
         "numeric": "cpp",
         "ratio": "cpp",
-        "cinttypes": "cpp"
+        "cinttypes": "cpp",
+        "string": "cpp"
     },
 }

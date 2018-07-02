@@ -46,15 +46,13 @@ void drawDirectory(std::tuple<C2D_Text*, int, int, int>*args)
 
 void prepareDirectoryForDraw(std::vector<std::string> file_str, std::vector<C2D_Text>& text)
 {
-    int i = 0;
     text.clear();
-    for(auto it = file_str.begin(); it != file_str.end(); ++it)
+    for(auto i : file_str)
     {
         C2D_Text txt;
-        C2D_TextParse(&txt, text_buf, it->c_str());
+        C2D_TextParse(&txt, text_buf, i.c_str());
         C2D_TextOptimize(&txt);
         text.push_back(txt);
-        i++;
     }
     return;
 }
@@ -69,87 +67,79 @@ int read_directory(const std::string &name, std::vector<std::string>& v)
     return 1;
 }
 
-std::string open_xplorer()
+void xplorer::open()
 {
-    std::vector<std::string> files;
-    std::string cur_directory = "/";
-
     std::string bottomText = "Press \uE000 to open the selected directory\n"
                              "Press \uE001 to go back to the previous directory\n"
                              "\uE079 and \uE07A to explore the contents\n"
                              "Press \uE002 to select the current directory as the\ndownload directory";
-    C2D_Text text;
-    stringToC2D(bottomText.c_str(), &text);
-    auto bottom = std::make_tuple(8.0f, 8.0f, 0.0f, 0.52f, 0.52f, &text, C2D_WithColor);
+    
+    stringToC2D(bottomText.c_str(), &this->m_text);
+    auto bottom = std::make_tuple(8.0f, 8.0f, 0.0f, 0.52f, 0.52f, &this->m_text, C2D_WithColor);
     uiSetScreenBottom((func_t)drawText, &bottom);
    
-    read_directory("/", files);
-    std::vector <C2D_Text>files_c2d;
-    prepareDirectoryForDraw(files, files_c2d);
-    auto p = std::make_tuple(files_c2d, (int)files.size(), 0, 0);
+    read_directory("/", this->m_files);
+    prepareDirectoryForDraw(this->m_files, this->m_files_c2d);
+    auto p = std::make_tuple(this->m_files_c2d, (int)this->m_files.size(), 0, 0);
     auto to_pass = &p;
-    uiSetScreenTop((func_t)drawDirectory, to_pass); 
-    int selected = 0;
-    std::vector <int> old_selected (0);
-    int scroll = 0;
-    std::vector <int> old_scroll (0);
+    uiSetScreenTop((func_t)drawDirectory, to_pass);
     while(aptMainLoop())
     {
         hidScanInput();
         if(keysDown() & KEY_DDOWN)
         {   
-            selected++;
-            printf("Selected %d\n", selected);
-            if(selected % MAX_DIR_ELEMENTS_ON_SCREEN == 0) scroll++;
-            if(selected == files.size()) { selected = 0; scroll = 0; }
-            std::cout << "Scroll :" << scroll << '\n';
-            *to_pass = std::make_tuple(files_c2d, (int)files.size(), scroll, selected);
+            this->m_selected++;
+            printf("Selected %d\n", this->m_selected);
+            if(this->m_selected % MAX_DIR_ELEMENTS_ON_SCREEN == 0) this->m_scroll++;
+            if(this->m_selected == m_files.size()) { this->m_selected = 0; this->m_scroll = 0; }
+            std::cout << "Scroll :" << this->m_scroll << '\n';
+            *to_pass = std::make_tuple(this->m_files_c2d, (int)this->m_files.size(), this->m_scroll, this->m_selected);
         }
 
         if(keysDown() & KEY_DUP)
         {
-            selected--;
-            printf("Selected %d \n", selected);
-            if(selected % MAX_DIR_ELEMENTS_ON_SCREEN == MAX_DIR_ELEMENTS_ON_SCREEN - 1 && selected != 0) scroll--;
-            if(selected < 0) { selected = files.size() - 1; scroll = files.size() / MAX_DIR_ELEMENTS_ON_SCREEN; }
-            std::cout << "Scroll :" << scroll << '\n';
-            *to_pass = std::make_tuple(files_c2d, (int)files.size(), scroll, selected);
+            this->m_selected--;
+            printf("Selected %d \n", this->m_selected);
+            if(this->m_selected % MAX_DIR_ELEMENTS_ON_SCREEN == MAX_DIR_ELEMENTS_ON_SCREEN - 1 && this->m_selected != 0) this->m_scroll--;
+            if(this->m_selected < 0) { this->m_selected = m_files.size() - 1; this->m_scroll = m_files.size() / MAX_DIR_ELEMENTS_ON_SCREEN; }
+            std::cout << "Scroll :" << this->m_scroll << '\n';
+            *to_pass = std::make_tuple(this->m_files_c2d, (int)m_files.size(), this->m_scroll, this->m_selected);
         }
 
         if(keysDown() & KEY_A)
         {
-            if(cur_directory != "/")
-                cur_directory += '/' + files[selected]; 
+            if(this->m_cur_directory != "/")
+                this->m_cur_directory += '/' + this->m_files[this->m_selected]; 
             else
-                cur_directory += files[selected];
-            if(!read_directory(cur_directory, files)) 
+                this->m_cur_directory += this->m_files[this->m_selected];
+            if(!read_directory(this->m_cur_directory, this->m_files)) 
             {   
-                cur_directory = cur_directory.substr(0, cur_directory.find_last_of("/"));
-                if(cur_directory.empty()) cur_directory = "/";
+                this->m_cur_directory = this->m_cur_directory.substr(0, this->m_cur_directory.find_last_of("/"));
+                if(this->m_cur_directory.empty()) this->m_cur_directory = "/";
                 continue;
             }
-            old_selected.push_back(selected);
-            old_scroll.push_back(scroll);
-            prepareDirectoryForDraw(files, files_c2d);
-            selected = 0;
-            scroll = 0;
-            *to_pass = std::make_tuple(files_c2d, (int)files.size(), scroll, selected);
+            this->m_old_selected.push_back(this->m_selected);
+            this->m_old_scroll.push_back(this->m_scroll);
+            prepareDirectoryForDraw(this->m_files, this->m_files_c2d);
+            this->m_selected = 0;
+            this->m_scroll = 0;
+            *to_pass = std::make_tuple(this->m_files_c2d, (int)this->m_files.size(), this->m_scroll, this->m_selected);
         }
 
         if(keysDown() & KEY_B)
         {
-            cur_directory = cur_directory.substr(0, cur_directory.find_last_of("/"));
-            if(cur_directory.empty()){ cur_directory = "/";}
-            read_directory(cur_directory, files);
-            prepareDirectoryForDraw(files, files_c2d);
-            if(!old_selected.empty())
+            this->m_cur_directory = this->m_cur_directory.substr(0, this->m_cur_directory.find_last_of("/"));
+            if(this->m_cur_directory.empty()){ this->m_cur_directory = "/";}
+            read_directory(this->m_cur_directory, this->m_files);
+            prepareDirectoryForDraw(this->m_files, this->m_files_c2d);
+            if(!this->m_old_selected.empty())
             {
-                selected = old_selected.back(); // Give us the last pos of the selector and then remove it from vector
-                old_selected.pop_back();
-                scroll = old_scroll.back();
-                old_scroll.pop_back();
+                this->m_selected = this->m_old_selected.back(); // Give us the last pos of the selector and then remove it from vector
+                this->m_old_selected.pop_back();
+                this->m_scroll = this->m_old_scroll.back();
+                this->m_old_scroll.pop_back();
             }
-            *to_pass = std::make_tuple(files_c2d, (int)files.size(), scroll, selected);
+            *to_pass = std::make_tuple(this->m_files_c2d, (int)this->m_files.size(), this->m_scroll, this->m_selected);
         }
 
         if(keysDown() & KEY_X)
@@ -158,7 +148,6 @@ std::string open_xplorer()
         }
     }
     //uiSetScreenBottom((func_t)drawDirectory, &p);
-
-    files.clear();
-    return cur_directory;
+    this->m_files.clear();
+    this->m_dloc = this->m_cur_directory;
 }
