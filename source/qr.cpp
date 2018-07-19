@@ -124,6 +124,9 @@ Result qr::qrScan(void)
 {
     //Create one more thread for qr decode
     this->events[0] = 0;
+    s32 index = 0;
+    bool busy;
+
     svcCreateMutex(&this->lock, false);
     CAMU_SetReceiving(&this->events[0], this->cameraBuffer, PORT_CAM1, 400 * 240 * sizeof(u16), (s16)this->transferUnit);
     svcWaitSynchronization(this->events[0], WAIT_TIMEOUT);
@@ -134,8 +137,6 @@ Result qr::qrScan(void)
     uiSetScreenTop((func_t)DrawImageOnScreen, to_pass);
     while(!this->done)
     {
-        s32 index = 0;
-        bool busy;
         svcWaitSynchronizationN(&index, this->events, 3, false, U64_MAX);
        // printf("Index: %d\n", index);
         switch(index)
@@ -164,9 +165,12 @@ Result qr::qrScan(void)
                 this->done = true;
                 break;
         }
-        svcReleaseMutex(this->lock);
-        svcWaitSynchronization(this->lock, U64_MAX);
-        CAMU_SetReceiving(&this->events[0], this->cameraBuffer, PORT_CAM1, 400 * 240 * sizeof(u16), (s16)this->transferUnit);
+        if(!this->done) 
+        {
+            svcReleaseMutex(this->lock);
+            svcWaitSynchronization(this->lock, U64_MAX);
+            CAMU_SetReceiving(&this->events[0], this->cameraBuffer, PORT_CAM1, 400 * 240 * sizeof(u16), (s16)this->transferUnit);
+        }
     }
     return 0;
 }

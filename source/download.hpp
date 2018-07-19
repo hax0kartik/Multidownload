@@ -4,8 +4,9 @@
 #include <vector>
 #include <utility>
 #include <string>
+#include "archive.h"
 
-class DownloadManager
+class DownloadManager : private archive
 {
     public:
     std::pair<Result, std::string> Initialize(void);
@@ -16,15 +17,12 @@ class DownloadManager
     void SetWriteFunctionCallback(size_t (*write_callback)(char *ptr, size_t size, size_t nmemb, void *userdata), void *userdata);
     std::pair<CURLcode, std::string> DownloadDirectly(void);
     std::pair<CURLcode, std::string> Perform();
-    void ExtractFileIfArchive(bool _extract = false)
-    {
-        this->extract = _extract; 
-    }
+    void ExtractFileIfArchive(bool _extract = false){ this->m_extract = _extract; }
     private:
     std::vector<std::string> headers;
-    std::string download_location;
+    std::string download_location = "";
     CURL *curl_handle = nullptr;
-    bool extract = false;
+    bool m_extract = false;
     CURLcode ret;
     Result retcode = 0;
 };

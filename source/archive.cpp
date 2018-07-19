@@ -1,14 +1,4 @@
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <3ds.h>
-#include <archive.h>
-#include <archive_entry.h>
-#include <fcntl.h>
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
-#include <string>
-#include <unistd.h>
+#include "archive.h"
 
 static int copy_data(struct archive *ar, struct archive *aw)
 {
@@ -22,65 +12,57 @@ static int copy_data(struct archive *ar, struct archive *aw)
     if (r == ARCHIVE_EOF)
       return (ARCHIVE_OK);
     if (r < ARCHIVE_OK)
-      return (r);
+      return r;
     r = archive_write_data_block(aw, buff, size, offset);
     if (r < ARCHIVE_OK) {
-      printf("%s\n", archive_error_string(aw));
-      return (r);
+      //printf("%s\n", archive_error_string(aw));
+      return r;
     }
   }
 }
-void extract(std::string filename)
+void archive::extract(std::string filename)
 {
-  struct archive *a;
-  struct archive *ext;
-  struct archive_entry *entry;
-  int flags;
-  int r;
-
-  /* Select which attributes we want to restore. */ 
-  flags = ARCHIVE_EXTRACT_PERM;
-  flags |= ARCHIVE_EXTRACT_ACL;
-  flags |= ARCHIVE_EXTRACT_FFLAGS;
-
-  a = archive_read_new();
-  archive_read_support_format_all(a);
-  ext = archive_write_disk_new();
-  archive_write_disk_set_options(ext, flags);
-  //archive_write_disk_set_standard_lookup(ext);
-  if ((r = archive_read_open_filename(a, filename.c_str(), 10240)))
-    printf("Couldn't find file");
-  for (;;) {
-    r = archive_read_next_header(a, &entry);
-    if (r == ARCHIVE_EOF)
-      break;
-	if(r == ARCHIVE_OK)
+    /* Select which attributes we want to restore. */ 
+    this->m_flags = ARCHIVE_EXTRACT_PERM;
+		this->m_flags |= ARCHIVE_EXTRACT_ACL;
+		this->m_flags |= ARCHIVE_EXTRACT_FFLAGS;
+  	this->m_a = archive_read_new();
+  	archive_read_support_format_all(this->m_a);
+		this->m_ext = archive_write_disk_new();
+  	archive_write_disk_set_options(this->m_ext, this->m_flags);
+  	//archive_write_disk_set_standard_lookup(this->m_ext  	
+		if ((this->m_r = archive_read_open_filename(this->m_a, filename.c_str(), 10240)))
+    { sprintf(this->m_errorBuffer, "Couldn't find file"); return; }
+  	for (;;) 
 	{
-		printf("%s\n",archive_entry_pathname(entry));
-	}
-    if (r < ARCHIVE_OK)
-      printf( "%s\n", archive_error_string(a));
-    if (r < ARCHIVE_WARN)
-        return;
-    r = archive_write_header(ext, entry);
-    if (r < ARCHIVE_OK)
-      printf("%s\n", archive_error_string(ext));
-    else if (archive_entry_size(entry) > 0) {
-      r = copy_data(a, ext);
-      if (r < ARCHIVE_OK)
-        printf("%s\n", archive_error_string(ext));
-      if (r < ARCHIVE_WARN)
-        return;
-    }
-    r = archive_write_finish_entry(ext);
-    if (r < ARCHIVE_OK)
-      printf("%s\n", archive_error_string(ext));
-    if (r < ARCHIVE_WARN)
-		return;
-  }
-  archive_read_close(a);
-  archive_read_free(a);
-  archive_write_close(ext);
-  archive_write_free(ext);
-  return;
+    	this->m_r = archive_read_next_header(this->m_a, &this->m_entry);
+    	if (this->m_r == ARCHIVE_EOF)
+      		break;
+    	if (this->m_r < ARCHIVE_OK)
+      		{ sprintf(this->m_errorBuffer, "%s", archive_error_string(this->m_a)); return; }
+    	if (this->m_r < ARCHIVE_WARN)
+        	return;
+    	this->m_r = archive_write_header(this->m_ext, this->m_entry);
+    	if (this->m_r < ARCHIVE_OK)
+      		{ sprintf(this->m_errorBuffer, "%s", archive_error_string(this->m_ext)); return; }
+    	
+		else if (archive_entry_size(this->m_entry) > 0) 
+		{
+      		this->m_r = copy_data(this->m_a, this->m_ext);
+			if (this->m_r < ARCHIVE_OK)
+        		{ sprintf(this->m_errorBuffer, "%s", archive_error_string(this->m_ext)); return; }
+      		if (this->m_r < ARCHIVE_WARN)
+        		return;
+    	}
+   		this->m_r = archive_write_finish_entry(this->m_ext);    	
+		if (this->m_r < ARCHIVE_OK)
+      		{ sprintf(this->m_errorBuffer, "%s", archive_error_string(this->m_ext)); return; }
+    	if (this->m_r < ARCHIVE_WARN)
+			return;
+  	}
+	archive_read_close(this->m_a);
+	archive_read_free(this->m_a);
+	archive_write_close(this->m_ext);
+	archive_write_free(this->m_ext);
+	return;
 }

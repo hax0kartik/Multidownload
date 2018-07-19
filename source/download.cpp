@@ -1,7 +1,9 @@
 #include "download.hpp"
 #include <vector>
 #include <malloc.h>
+#include <iostream>
 #include <stdio.h>
+#include "utils.h"
 using namespace std;
 
 static size_t header_function(char* b, size_t size, size_t nitems, void *userdata) 
@@ -86,6 +88,7 @@ pair<CURLcode, std::string> DownloadManager::DownloadDirectly(void)
     if(this->download_location != "/") _download_location = this->download_location + "/sometext"; 
     else  _download_location = this->download_location + "sometext"; 
     FILE *file = fopen(_download_location.c_str(), "wb+");
+    if(file == NULL) return std::make_pair((CURLcode)0, "File Open Failed!");
     curl_easy_setopt(this->curl_handle, CURLOPT_WRITEFUNCTION, write_callback_stdio);
     curl_easy_setopt(this->curl_handle, CURLOPT_WRITEDATA, file);
     auto r = this->Perform(); //Get the file
@@ -100,10 +103,35 @@ pair<CURLcode, std::string> DownloadManager::DownloadDirectly(void)
         }
     }
 
+    if(filename.empty() && r.first == CURLE_OK)
+    {
+        utils utils;
+        utils.InitKeyboard();
+        utils.ShowKeyboard("Enter filename with format");
+        filename = utils.GetKeyboardData();
+    }
+
     printf(this->download_location.c_str());
     if(this->download_location != "/")
-        std::rename(_download_location.c_str(), std::string(this->download_location + "/" + filename).c_str());
+        std::rename(_download_location.c_str(), (this->download_location = std::string(this->download_location + "/" + filename)).c_str());
     else
-        std::rename(_download_location.c_str(), std::string(this->download_location + filename).c_str());
+        std::rename(_download_location.c_str(), (this->download_location = std::string(this->download_location + filename)).c_str());
+    
+    std::cout << this->download_location.c_str() << '\n';
+    auto fn = [](std::string string)
+    {
+        if(string.find("zip") != string::npos || string.find("7z") != string::npos || string.find("rar") != string::npos || string.find("tar") != string::npos)
+            return true;
+        return false;
+    };
+
+    if(this->m_extract == true && fn(this->download_location))
+    {
+        printf("Extracting\n");
+        extract(this->download_location); 
+        printf("Done\n");
+        r.second = getError();
+        std::cout << r.second;
+    }
     return make_pair(r.first, r.second);
 }

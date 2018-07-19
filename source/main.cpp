@@ -10,7 +10,7 @@
 
 using namespace std;
 C2D_TextBuf text_buf;
-extern void stringToC2D(const char* string, C2D_Text *text);
+extern void stringToC2D(const char *string, C2D_Text *text, C2D_TextBuf text_);
 bool isWithinTouchbox(touchPosition *pos, int x1, int y1, int w, int h)
 {
     return (pos->px > x1 && pos->py > y1 && pos->px < w + x1 && pos->py < h + y1);
@@ -54,7 +54,7 @@ int progress_callback(void *clientp,double dltotal,double dlnow,double ultotal,d
     if(dltotal == 0) return 0;
     auto p = static_cast<std::tuple<float, C2D_Text *>*>(clientp);
     string tmp = "Downloaded " + std::to_string((u32)dlnow) + " out of " + std::to_string((u32)dltotal) + " bytes";
-    stringToC2D(tmp.c_str(), std::get<1>(*p));
+    stringToC2D(tmp.c_str(), std::get<1>(*p), text_buf);
     *p = make_tuple((dlnow/dltotal) * 316, std::get<1>(*p));
     return 0;
 }
@@ -64,20 +64,20 @@ int main()
     romfsInit();
     gfxInitDefault();
 
-    text_buf = C2D_TextBufNew(0x8000);
+    text_buf = C2D_TextBufNew(1024);
     C2D_TextBuf text_buf2 = C2D_TextBufNew(0x2000);
     C2D_Text *text = new C2D_Text[2];
 
     std::pair<C2D_Image, C2D_Image>images = sceneInit();
     
-    const char *downloaded = "Downloaded 0 out of 0 bytes";
-    stringToC2D(downloaded, &text[1]);
+    std::string downloaded = "Downloaded 0 out of 0 bytes";
+    stringToC2D(downloaded.c_str(), &text[1], text_buf);
     auto p1 = make_tuple((1/100) * 316, &text[1]);
     auto to_pass_1 = &p1;
 
-    const char * dl = "Download Location: ";
+    std::string dl = "Download Location: ";
     utils util;
-    std::string dlloc = util.ReadDownloadLocationFromConfig();
+    std::string dlloc = "/";//util.ReadDownloadLocationFromConfig();
     
     C2D_TextBufClear(text_buf2);
     C2D_TextParse(&text[0], text_buf2, std::string(dl + dlloc).c_str());
@@ -88,7 +88,7 @@ int main()
 
     uiSetScreenTop((func_t)drawImageAndDownload, to_pass);
     uiSetScreenBottom((func_t)drawImage, &images.second);
-    //ui.debug = true;
+  //  ui.debug = true;
     ui.run = true;
     ui.uiThreadHandle = threadCreate(uiThread, nullptr, 8 * 1024, 0x20, -2, true);
    // ui.hid_func = ini_func;
@@ -113,7 +113,7 @@ int main()
             auto res = util.dm.DownloadDirectly();
             // We'll reuse the url string
             url = "Download :" + res.second;
-            stringToC2D(url.c_str(), &text[1]);
+            stringToC2D(url.c_str(), &text[1], text_buf);
             *to_pass_1 = make_tuple(316, &text[1]);
             //DownloadManager::DownloadURL(url);
         }
@@ -138,6 +138,7 @@ int main()
             if((res = util.qrInit()) != 0) {printf("Result : %08lX", res);}
             util.qrScan();
             std::string url = util.getDecodedURL();
+            if(url.empty()) continue;
             fprintf(stderr, "Back in main function");
             fprintf(stderr, "URL: %s", url.c_str());
             *to_pass = std::make_tuple(images.first, &text[0]);
@@ -150,7 +151,7 @@ int main()
             util.dm.SetProgressMeterCallback(progress_callback, to_pass_1);
             auto ret = util.dm.DownloadDirectly();
             url = "Download :"  + ret.second;
-            stringToC2D(url.c_str(), &text[1]);
+            stringToC2D(url.c_str(), &text[1], text_buf);
             *to_pass_1 = make_tuple(316, &text[1]);
             // TODO
         }

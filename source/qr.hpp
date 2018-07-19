@@ -11,10 +11,7 @@ class qr
     public:
     Result qrInit(void);
     Result qrScan(void);
-    std::string getDecodedURL(void)
-    {
-        return std::string(url);
-    }
+    std::string getDecodedURL(void) { return std::string(url); }
     private:
     struct quirc *context;
     u16 *cameraBuffer;

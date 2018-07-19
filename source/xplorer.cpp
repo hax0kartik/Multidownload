@@ -9,11 +9,10 @@ namespace fs = std::filesystem;
 
 #define MAX_DIR_ELEMENTS_ON_SCREEN 18
 
-extern C2D_TextBuf text_buf;
-void stringToC2D(const char *string, C2D_Text *text)
+void stringToC2D(const char *string, C2D_Text *text, C2D_TextBuf text_)
 {
-    C2D_TextBufClear(text_buf);
-    C2D_TextParse(text, text_buf, string);
+    C2D_TextBufClear(text_);
+    C2D_TextParse(text, text_, string);
     C2D_TextOptimize(text);
 }
 
@@ -47,10 +46,11 @@ void drawDirectory(std::tuple<C2D_Text*, int, int, int>*args)
 void prepareDirectoryForDraw(std::vector<std::string> file_str, std::vector<C2D_Text>& text)
 {
     text.clear();
+    C2D_TextBuf text_ = C2D_TextBufNew(1024);
     for(auto i : file_str)
     {
         C2D_Text txt;
-        C2D_TextParse(&txt, text_buf, i.c_str());
+        C2D_TextParse(&txt, text_, i.c_str());
         C2D_TextOptimize(&txt);
         text.push_back(txt);
     }
@@ -69,12 +69,13 @@ int read_directory(const std::string &name, std::vector<std::string>& v)
 
 void xplorer::open()
 {
+    C2D_TextBuf text_ = C2D_TextBufNew(1024);
     std::string bottomText = "Press \uE000 to open the selected directory\n"
                              "Press \uE001 to go back to the previous directory\n"
                              "\uE079 and \uE07A to explore the contents\n"
                              "Press \uE002 to select the current directory as the\ndownload directory";
     
-    stringToC2D(bottomText.c_str(), &this->m_text);
+    stringToC2D(bottomText.c_str(), &this->m_text, text_);
     auto bottom = std::make_tuple(8.0f, 8.0f, 0.0f, 0.52f, 0.52f, &this->m_text, C2D_WithColor);
     uiSetScreenBottom((func_t)drawText, &bottom);
    
@@ -148,6 +149,7 @@ void xplorer::open()
         }
     }
     //uiSetScreenBottom((func_t)drawDirectory, &p);
+    this->m_files_c2d.clear();
     this->m_files.clear();
-    this->m_dloc = this->m_cur_directory;
+    this->m_dloc = std::move(this->m_cur_directory);
 }
